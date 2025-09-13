@@ -1,0 +1,66 @@
+{
+  "title": "Binary Classification Data Collection Checklist",
+  "model_type": "Lantern Fly vs Everything Else",
+  "created": "2025-09-12T22:06:02.013658",
+  "lantern_fly_photos": {
+    "target_count": 500,
+    "current_count": 0,
+    "directory": "data/processed/train/lantern_fly/",
+    "requirements": [
+      "Dead or squashed spotted lantern flies only",
+      "Sharp focus and good lighting",
+      "Various angles and backgrounds",
+      "Minimum 224x224 pixels",
+      "JPG, PNG, or other common formats"
+    ],
+    "collection_guide": "photo_collection_guide.md",
+    "status": "Not started"
+  },
+  "non_lantern_fly_images": {
+    "target_count": 2000,
+    "current_count": 0,
+    "directory": "data/processed/train/non_lantern_fly/",
+    "requirements": [
+      "Everything that is NOT a squashed lantern fly",
+      "General photos, other insects, objects, nature",
+      "Clear, well-lit images",
+      "Minimum 224x224 pixels",
+      "Diverse content and styles"
+    ],
+    "collection_guide": "negative_image_collection_guide.json",
+    "status": "Not started",
+    "subdirectories": {
+      "general_photos": "Personal photos, stock photos",
+      "other_insects": "Any insects that are not lantern flies",
+      "objects": "Cars, buildings, furniture, etc.",
+      "nature": "Trees, flowers, landscapes",
+      "people": "Portraits, activities (with permission)"
+    }
+  },
+  "data_balance": {
+    "target_ratio": "1:4 (lantern_fly : non_lantern_fly)",
+    "augmentation": "4x augmentation for lantern fly images",
+    "final_ratio": "1:2 (after augmentation)"
+  },
+  "quality_control": {
+    "lantern_fly": [
+      "Verify all images show dead/squashed lantern flies",
+      "Check focus and lighting quality",
+      "Ensure variety in conditions and locations",
+      "Remove blurry or poor quality images"
+    ],
+    "non_lantern_fly": [
+      "Verify no lantern fly images included",
+      "Check for diverse content",
+      "Ensure good image quality",
+      "Remove any confusing or low-quality images"
+    ]
+  },
+  "next_steps": [
+    "1. Collect 500 lantern fly photos",
+    "2. Collect 2000+ non-lantern fly images",
+    "3. Run data processing script",
+    "4. Train the binary classification model",
+    "5. Evaluate model performance"
+  ]
+}
