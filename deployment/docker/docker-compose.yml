@@ -1,0 +1,83 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgis/postgis:15-3.3
+    container_name: lantern-fly-db
+    environment:
+      POSTGRES_DB: lantern_fly_tracker
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ../database/schemas/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - lantern-fly-network
+
+  # Redis for caching (optional)
+  redis:
+    image: redis:7-alpine
+    container_name: lantern-fly-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - lantern-fly-network
+
+  # Backend API
+  backend:
+    build:
+      context: ../../backend
+      dockerfile: Dockerfile
+    container_name: lantern-fly-backend
+    environment:
+      - NODE_ENV=production
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=lantern_fly_tracker
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - REDIS_URL=redis://redis:6379
+    ports:
+      - "5000:5000"
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - lantern-fly-network
+
+  # ML Model Service
+  ml-model:
+    build:
+      context: ../../ml-model
+      dockerfile: Dockerfile
+    container_name: lantern-fly-ml
+    ports:
+      - "8000:8000"
+    volumes:
+      - ml_models:/app/models
+    networks:
+      - lantern-fly-network
+
+  # Frontend (for production)
+  frontend:
+    build:
+      context: ../../frontend
+      dockerfile: Dockerfile
+    container_name: lantern-fly-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - lantern-fly-network
+
+volumes:
+  postgres_data:
+  ml_models:
+
+networks:
+  lantern-fly-network:
+    driver: bridge
