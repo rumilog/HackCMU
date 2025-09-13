@@ -1,0 +1,27 @@
+{
+  "Non-Lanternfly": {
+    "precision": 1.0,
+    "recall": 0.88,
+    "f1-score": 0.9361702127659575,
+    "support": 150.0
+  },
+  "Lanternfly": {
+    "precision": 0.5714285714285714,
+    "recall": 1.0,
+    "f1-score": 0.7272727272727273,
+    "support": 24.0
+  },
+  "accuracy": 0.896551724137931,
+  "macro avg": {
+    "precision": 0.7857142857142857,
+    "recall": 0.94,
+    "f1-score": 0.8317214700193424,
+    "support": 174.0
+  },
+  "weighted avg": {
+    "precision": 0.9408866995073892,
+    "recall": 0.896551724137931,
+    "f1-score": 0.907356766491029,
+    "support": 174.0
+  }
+}
