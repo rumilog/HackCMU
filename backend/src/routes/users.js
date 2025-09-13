@@ -16,7 +16,7 @@ router.get('/me', async (req, res) => {
       });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret');
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret-key');
     const user = await User.findByPk(decoded.userId, {
       attributes: ['id', 'username', 'email', 'points', 'total_photos', 'confirmed_lantern_flies', 'created_at'],
     });
@@ -50,7 +50,7 @@ router.get('/stats', async (req, res) => {
       });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret');
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret-key');
     const user = await User.findByPk(decoded.userId);
     
     if (!user) {

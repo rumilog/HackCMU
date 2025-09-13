@@ -17,9 +17,9 @@ import {
   Map,
   Leaderboard,
   BugReport,
-  PhotoCamera,
   LocationOn,
   EmojiEvents,
+  Refresh,
 } from '@mui/icons-material';
 import { useAuth } from '../hooks/useAuth';
 import { useQuery } from 'react-query';
@@ -29,7 +29,7 @@ const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  const { data: stats, isLoading: statsLoading } = useQuery(
+  const { data: stats, isLoading: statsLoading, refetch: refetchStats } = useQuery(
     'userStats',
     userService.getUserStats,
     {
@@ -78,18 +78,37 @@ const DashboardPage: React.FC = () => {
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       {/* Welcome Section */}
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h4" gutterBottom>
-          Welcome back, {user?.username}! 🦟
-        </Typography>
-        <Typography variant="body1" color="text.secondary">
-          Help track invasive lantern fly populations in your area
-        </Typography>
+      <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <Box>
+          <Typography variant="h4" gutterBottom>
+            Welcome back, {user?.username}! 🦟
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
+            Help track invasive lantern fly populations in your area
+          </Typography>
+        </Box>
+        <Button
+          variant="outlined"
+          startIcon={<Refresh />}
+          onClick={() => refetchStats()}
+          disabled={statsLoading}
+          sx={{ 
+            borderColor: 'primary.main',
+            color: 'primary.main',
+            '&:hover': {
+              borderColor: 'primary.dark',
+              backgroundColor: 'primary.light',
+              color: 'primary.dark'
+            }
+          }}
+        >
+          Refresh Stats
+        </Button>
       </Box>
 
       {/* Stats Cards */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item xs={12} sm={6} md={4}>
           <Card>
             <CardContent>
               <Box display="flex" alignItems="center" justifyContent="space-between">
@@ -98,7 +117,7 @@ const DashboardPage: React.FC = () => {
                     Total Points
                   </Typography>
                   <Typography variant="h4">
-                    {user?.points || 0}
+                    {statsLoading ? '...' : (stats?.points || 0)}
                   </Typography>
                 </Box>
                 <Avatar sx={{ bgcolor: 'primary.main' }}>
@@ -109,27 +128,7 @@ const DashboardPage: React.FC = () => {
           </Card>
         </Grid>
 
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
-              <Box display="flex" alignItems="center" justifyContent="space-between">
-                <Box>
-                  <Typography color="text.secondary" gutterBottom>
-                    Photos Taken
-                  </Typography>
-                  <Typography variant="h4">
-                    {stats?.total_photos || 0}
-                  </Typography>
-                </Box>
-                <Avatar sx={{ bgcolor: 'secondary.main' }}>
-                  <PhotoCamera />
-                </Avatar>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item xs={12} sm={6} md={4}>
           <Card>
             <CardContent>
               <Box display="flex" alignItems="center" justifyContent="space-between">
@@ -138,7 +137,7 @@ const DashboardPage: React.FC = () => {
                     Lantern Flies
                   </Typography>
                   <Typography variant="h4">
-                    {stats?.confirmed_lantern_flies || 0}
+                    {statsLoading ? '...' : (stats?.confirmed_lantern_flies || 0)}
                   </Typography>
                 </Box>
                 <Avatar sx={{ bgcolor: 'success.main' }}>
@@ -149,7 +148,7 @@ const DashboardPage: React.FC = () => {
           </Card>
         </Grid>
 
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item xs={12} sm={6} md={4}>
           <Card>
             <CardContent>
               <Box display="flex" alignItems="center" justifyContent="space-between">
@@ -158,7 +157,7 @@ const DashboardPage: React.FC = () => {
                     Accuracy
                   </Typography>
                   <Typography variant="h4">
-                    {stats?.accuracy_percentage || 0}%
+                    {statsLoading ? '...' : (stats?.accuracy_percentage || 0)}%
                   </Typography>
                 </Box>
                 <Avatar sx={{ bgcolor: 'info.main' }}>
