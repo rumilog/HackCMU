@@ -1,0 +1,225 @@
+{
+  "title": "Lantern Fly Photo Collection Guide",
+  "version": "1.0",
+  "created": "2025-09-12T21:48:05.275065",
+  "target": "500 squashed lantern fly photos",
+  "purpose": "Training data for binary classification model",
+  "overview": {
+    "goal": "Collect 500 high-quality photos of dead/squashed lantern flies",
+    "use_case": "Training a machine learning model to identify lantern flies",
+    "classification": "Binary: Lantern Fly vs Non-Lantern Fly",
+    "timeline": "1-2 days of focused collection"
+  },
+  "photo_requirements": {
+    "quality": {
+      "resolution": "Minimum 224x224 pixels (preferably 512x512 or higher)",
+      "format": "JPG, PNG, or other common image formats",
+      "focus": "Sharp focus on the insect, avoid blurry images",
+      "lighting": "Good lighting, avoid shadows or overexposure",
+      "composition": "Insect should fill at least 30% of the frame"
+    },
+    "content": {
+      "subject": "Dead or squashed spotted lantern flies (Lycorma delicatula)",
+      "condition": "Various states of damage (freshly dead to heavily squashed)",
+      "background": "Diverse backgrounds (sidewalks, roads, leaves, etc.)",
+      "angle": "Multiple angles (top view, side view, close-up)",
+      "size": "Include both adult and nymph lantern flies if possible"
+    },
+    "exclusions": {
+      "avoid": [
+        "Live lantern flies",
+        "Other insect species",
+        "Blurry or out-of-focus images",
+        "Images where the insect is too small",
+        "Images with multiple insects (focus on single insects)"
+      ]
+    }
+  },
+  "collection_strategy": {
+    "locations": {
+      "high_priority": [
+        "Sidewalks and walkways",
+        "Parking lots",
+        "Roads and bike paths",
+        "Outdoor seating areas",
+        "Building entrances and exits"
+      ],
+      "medium_priority": [
+        "Tree bases and trunks",
+        "Outdoor furniture",
+        "Playground equipment",
+        "Sports fields and courts"
+      ],
+      "low_priority": [
+        "Natural areas (leaves, grass)",
+        "Water features",
+        "Indoor locations"
+      ]
+    },
+    "timing": {
+      "best_times": [
+        "Early morning (7-9 AM)",
+        "Late afternoon (4-6 PM)",
+        "After rain (when insects are more visible)"
+      ],
+      "weather_conditions": [
+        "Clear or partly cloudy days",
+        "Avoid heavy rain or strong winds",
+        "Good lighting conditions"
+      ]
+    },
+    "systematic_approach": {
+      "grid_search": "Divide campus into sections and search systematically",
+      "high_traffic_areas": "Focus on areas with high foot traffic",
+      "variety": "Ensure diversity in locations and conditions",
+      "documentation": "Note location and conditions for each photo"
+    }
+  },
+  "photo_techniques": {
+    "camera_settings": {
+      "mode": "Auto mode is fine, but manual focus if possible",
+      "flash": "Use natural lighting when possible, flash if needed",
+      "stability": "Hold camera steady, use two hands if needed"
+    },
+    "composition": {
+      "framing": "Fill frame with insect, leave some background context",
+      "angle": "Take multiple angles (top, side, close-up)",
+      "distance": "Close enough to see details, far enough for context",
+      "background": "Include some background for context"
+    },
+    "quality_checks": {
+      "before_moving": [
+        "Check image is in focus",
+        "Verify insect is clearly visible",
+        "Ensure good lighting",
+        "Check composition"
+      ],
+      "review_later": [
+        "Delete blurry or poor quality images",
+        "Keep best 2-3 images per insect",
+        "Organize by location or date"
+      ]
+    }
+  },
+  "data_organization": {
+    "naming_convention": "lantern_fly_YYYYMMDD_HHMMSS_location.jpg",
+    "examples": [
+      "lantern_fly_20241209_143022_sidewalk_001.jpg",
+      "lantern_fly_20241209_143045_parking_lot_002.jpg",
+      "lantern_fly_20241209_143108_tree_base_003.jpg"
+    ],
+    "metadata": {
+      "capture_date": "YYYY-MM-DD",
+      "capture_time": "HH:MM:SS",
+      "location": "General area description",
+      "condition": "Fresh, moderately damaged, heavily squashed",
+      "size": "Adult, nymph, or unknown",
+      "background": "Sidewalk, road, leaf, etc."
+    }
+  },
+  "quality_control": {
+    "immediate_checks": [
+      "Image is in focus",
+      "Insect is clearly visible",
+      "Good lighting and contrast",
+      "Appropriate composition"
+    ],
+    "batch_review": [
+      "Remove duplicate or very similar images",
+      "Ensure variety in conditions and locations",
+      "Check for consistent quality",
+      "Verify all images show lantern flies"
+    ],
+    "final_validation": [
+      "Count total images (target: 500)",
+      "Check for diversity in locations",
+      "Verify quality standards met",
+      "Organize into final dataset"
+    ]
+  },
+  "safety_considerations": {
+    "general": [
+      "Be aware of traffic when photographing on roads",
+      "Watch for uneven surfaces and obstacles",
+      "Stay hydrated and take breaks",
+      "Work in pairs if possible for safety"
+    ],
+    "campus_specific": [
+      "Follow campus safety guidelines",
+      "Be respectful of campus activities",
+      "Avoid disrupting classes or events",
+      "Stay in public areas"
+    ]
+  },
+  "equipment_checklist": {
+    "essential": [
+      "Smartphone or camera",
+      "Fully charged battery",
+      "Extra storage space (at least 2GB)",
+      "Comfortable walking shoes"
+    ],
+    "recommended": [
+      "Portable charger",
+      "Small notebook for notes",
+      "Water bottle",
+      "Sun protection"
+    ],
+    "optional": [
+      "Camera tripod or stabilizer",
+      "Extra memory cards",
+      "Lens cleaning cloth"
+    ]
+  },
+  "progress_tracking": {
+    "daily_goals": {
+      "day_1": "200-250 photos",
+      "day_2": "250-300 photos (total: 500)"
+    },
+    "milestones": [
+      "100 photos: 20% complete",
+      "250 photos: 50% complete",
+      "400 photos: 80% complete",
+      "500 photos: 100% complete"
+    ],
+    "quality_metrics": [
+      "Focus quality: >90% sharp images",
+      "Lighting quality: >80% well-lit images",
+      "Composition: >70% well-composed images",
+      "Diversity: Photos from at least 10 different locations"
+    ]
+  },
+  "troubleshooting": {
+    "common_issues": {
+      "blurry_images": "Hold camera steady, use two hands, check focus",
+      "poor_lighting": "Move to better lighting, use flash if needed",
+      "small_insects": "Get closer, use zoom if available",
+      "similar_photos": "Vary angles and distances, include different backgrounds"
+    },
+    "quality_improvement": {
+      "focus": "Tap to focus on the insect, wait for focus confirmation",
+      "lighting": "Position yourself to avoid shadows, use natural light",
+      "composition": "Fill frame with insect, leave some background context",
+      "stability": "Brace against objects, use two hands, take multiple shots"
+    }
+  },
+  "post_collection": {
+    "immediate_steps": [
+      "Backup photos to computer/cloud",
+      "Review and delete poor quality images",
+      "Organize photos by location or date",
+      "Count total images collected"
+    ],
+    "preparation_for_training": [
+      "Ensure 500+ high-quality images",
+      "Verify diversity in locations and conditions",
+      "Organize into final dataset structure",
+      "Create backup copies"
+    ],
+    "next_steps": [
+      "Run data processing script",
+      "Begin model training",
+      "Monitor training progress",
+      "Evaluate model performance"
+    ]
+  }
+}
