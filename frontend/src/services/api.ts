@@ -62,11 +62,19 @@ export const apiService = {
   },
 
   upload: async <T>(url: string, formData: FormData): Promise<T> => {
-    const response = await api.post(url, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
+    // Create a separate axios instance for uploads to avoid header conflicts
+    const uploadApi = axios.create({
+      baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
+      timeout: 30000,
     });
+    
+    // Add auth token if available
+    const token = localStorage.getItem('token');
+    if (token) {
+      uploadApi.defaults.headers.Authorization = `Bearer ${token}`;
+    }
+    
+    const response = await uploadApi.post(url, formData);
     return response.data;
   },
 };

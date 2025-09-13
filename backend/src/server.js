@@ -9,7 +9,7 @@ import expressValidator from 'express-validator';
 
 // Import routes
 import authRoutes from './routes/auth.js';
-import photoRoutes from './routes/photos.js';
+import photoRoutes from './routes/photos_ml.js'; // Use ML-enabled photo routes
 import userRoutes from './routes/users.js';
 import mapRoutes from './routes/map.js';
 

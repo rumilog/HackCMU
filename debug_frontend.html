@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Frontend Debug Test</title>
+</head>
+<body>
+    <h1>Frontend Debug Test</h1>
+    <input type="file" id="fileInput" accept="image/*">
+    <button onclick="testFileUpload()">Test Upload</button>
+    <div id="result"></div>
+
+    <script>
+        async function testFileUpload() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                document.getElementById('result').innerHTML = 'No file selected';
+                return;
+            }
+            
+            console.log('Selected file:', {
+                name: file.name,
+                size: file.size,
+                type: file.type,
+                lastModified: file.lastModified
+            });
+            
+            const formData = new FormData();
+            formData.append('image', file);
+            
+            console.log('FormData contents:');
+            for (let [key, value] of formData.entries()) {
+                console.log(`  ${key}:`, value);
+            }
+            
+            try {
+                const response = await fetch('http://localhost:5000/api/photos/classify', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                console.log('Response:', result);
+                document.getElementById('result').innerHTML = JSON.stringify(result, null, 2);
+                
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('result').innerHTML = 'Error: ' + error.message;
+            }
+        }
+    </script>
+</body>
+</html>

@@ -29,10 +29,46 @@ export const photoService = {
       const formData = new FormData();
       formData.append('image', file);
 
-      const response = await apiService.upload<ClassificationResult>('/photos/classify', formData);
-      return response;
+      console.log('Sending classification request...');
+      console.log('FormData contents:');
+      for (let [key, value] of formData.entries()) {
+        console.log(`  ${key}:`, value);
+        if (value instanceof File) {
+          console.log(`    File details:`, {
+            name: value.name,
+            size: value.size,
+            type: value.type,
+            lastModified: value.lastModified
+          });
+        }
+      }
+      console.log('File details:', {
+        name: file.name,
+        size: file.size,
+        type: file.type
+      });
+      
+      const response = await apiService.upload<any>('/photos/classify', formData);
+      console.log('Raw response:', response);
+      
+      // Handle the backend response structure
+      if (response && response.success) {
+        const result = {
+          is_lantern_fly: response.is_lantern_fly || false,
+          confidence_score: response.confidence_score || 0,
+          points_awarded: response.points_awarded || 0,
+          model_version: response.model_version,
+          class_probabilities: response.class_probabilities
+        };
+        console.log('Processed result:', result);
+        return result;
+      } else {
+        throw new Error(response?.message || 'Classification failed');
+      }
     } catch (error: any) {
-      throw new Error(error.response?.data?.message || 'Photo classification failed');
+      console.error('Classification service error:', error);
+      console.error('Error response:', error.response);
+      throw new Error(error.response?.data?.message || error.message || 'Photo classification failed');
     }
   },
 

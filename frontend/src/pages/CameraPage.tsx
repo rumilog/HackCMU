@@ -124,7 +124,19 @@ const CameraPage: React.FC = () => {
     // Convert to blob
     canvas.toBlob((blob) => {
       if (blob) {
-        const imageUrl = URL.createObjectURL(blob);
+        console.log('Canvas blob created:', {
+          size: blob.size,
+          type: blob.type
+        });
+        
+        // Ensure the blob has the correct MIME type
+        const typedBlob = new Blob([blob], { type: 'image/jpeg' });
+        console.log('Typed canvas blob:', {
+          size: typedBlob.size,
+          type: typedBlob.type
+        });
+        
+        const imageUrl = URL.createObjectURL(typedBlob);
         setCapturedImage(imageUrl);
         stopCamera();
       }
@@ -140,14 +152,62 @@ const CameraPage: React.FC = () => {
       // Convert image URL to File
       const response = await fetch(capturedImage);
       const blob = await response.blob();
-      const file = new File([blob], 'photo.jpg', { type: 'image/jpeg' });
-
-      const result = await photoService.classifyPhoto(file);
-      setClassificationResult(result);
       
+      console.log('Fetched blob:', {
+        size: blob.size,
+        type: blob.type
+      });
+      
+      // Ensure the blob has the correct MIME type
+      const typedBlob = new Blob([blob], { type: 'image/jpeg' });
+      const file = new File([typedBlob], 'photo.jpg', { type: 'image/jpeg' });
+      
+      console.log('Created file from typed blob:', {
+        name: file.name,
+        size: file.size,
+        type: file.type
+      });
+
+      console.log('Starting classification...');
+      console.log('File object:', {
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        lastModified: file.lastModified
+      });
+      
+      // Test if the file is actually readable
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        console.log('File reader result:', e.target?.result ? 'File is readable' : 'File is not readable');
+      };
+      reader.readAsDataURL(file);
+      console.log('Original blob:', {
+        size: blob.size,
+        type: blob.type
+      });
+      console.log('Typed blob:', {
+        size: typedBlob.size,
+        type: typedBlob.type
+      });
+      
+      const result = await photoService.classifyPhoto(file);
+      console.log('Classification result:', result);
+      
+      // Validate the result structure
+      if (!result || typeof result.is_lantern_fly !== 'boolean') {
+        throw new Error('Invalid classification result received');
+      }
+      
+      setClassificationResult(result);
       toast.success('Image classified successfully!');
     } catch (error: any) {
       console.error('Classification error:', error);
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        response: error.response
+      });
       toast.error(error.message || 'Classification failed');
     } finally {
       setIsClassifying(false);
@@ -351,19 +411,19 @@ const CameraPage: React.FC = () => {
                     />
                   )}
                   <Typography variant="body2" color="text.secondary">
-                    Confidence: {(classificationResult.confidence_score * 100).toFixed(1)}%
+                    Confidence: {((classificationResult.confidence_score || 0) * 100).toFixed(1)}%
                   </Typography>
                 </Box>
 
                 <LinearProgress
                   variant="determinate"
-                  value={classificationResult.confidence_score * 100}
-                  color={classificationResult.is_lantern_fly ? 'success' : 'default'}
+                  value={(classificationResult.confidence_score || 0) * 100}
+                  color={classificationResult.is_lantern_fly ? 'primary' : 'secondary'}
                   sx={{ mb: 2 }}
                 />
 
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                  Points to be awarded: {classificationResult.points_awarded}
+                  Points to be awarded: {classificationResult.points_awarded || 0}
                 </Typography>
 
                 <Box sx={{ display: 'flex', gap: 2 }}>

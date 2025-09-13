@@ -1,0 +1,12 @@
+# Core ML dependencies
+torch>=2.0.0
+torchvision>=0.15.0
+Pillow>=9.0.0
+numpy>=1.21.0
+
+# API dependencies
+Flask>=2.3.0
+Flask-CORS>=4.0.0
+
+# Utilities
+pathlib2>=2.3.0

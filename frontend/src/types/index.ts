@@ -37,6 +37,11 @@ export interface ClassificationResult {
   is_lantern_fly: boolean;
   confidence_score: number;
   points_awarded: number;
+  model_version?: string;
+  class_probabilities?: {
+    non_lanternfly: number;
+    lanternfly: number;
+  };
 }
 
 export interface AuthResponse {
