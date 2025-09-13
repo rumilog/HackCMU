@@ -1,6 +1,8 @@
 import express from 'express';
 import multer from 'multer';
 import { body, validationResult } from 'express-validator';
+import { Photo, User } from '../models/index.js';
+import { Op } from 'sequelize';
 
 const router = express.Router();
 
@@ -137,18 +139,35 @@ router.get('/user', async (req, res) => {
 // Get map locations endpoint
 router.get('/map', async (req, res) => {
   try {
-    // For now, return mock map data
-    // TODO: Implement actual database query
-    const mockLocations = Array.from({ length: 10 }, (_, i) => ({
-      id: i + 1,
-      latitude: 40.7128 + (Math.random() - 0.5) * 0.2,
-      longitude: -74.0060 + (Math.random() - 0.5) * 0.2,
-      is_lantern_fly: Math.random() > 0.4,
-      confidence_score: Math.random() * 0.4 + 0.6,
-      created_at: new Date(Date.now() - i * 3600000).toISOString(),
+    // Get all photos with location data for the map
+    const photos = await Photo.findAll({
+      where: {
+        latitude: { [Op.not]: null },
+        longitude: { [Op.not]: null }
+      },
+      include: [{
+        model: User,
+        as: 'user',
+        attributes: ['username']
+      }],
+      order: [['created_at', 'DESC']],
+      limit: 1000 // Limit to prevent too many markers
+    });
+
+    // Format the data for the map
+    const mapLocations = photos.map(photo => ({
+      id: photo.id,
+      latitude: photo.latitude,
+      longitude: photo.longitude,
+      is_lantern_fly: photo.is_lantern_fly,
+      confidence_score: photo.confidence_score,
+      created_at: photo.created_at,
+      username: photo.user?.username || 'Unknown',
+      location_name: photo.location_name,
+      image_url: photo.image_url
     }));
 
-    res.json(mockLocations);
+    res.json(mapLocations);
   } catch (error) {
     console.error('Get map locations error:', error);
     res.status(500).json({

@@ -1,11 +1,30 @@
 import React, { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
-import { Container, Typography, Box, Card, CardContent, Chip, Alert } from '@mui/material';
-import { BugReport, LocationOn, CheckCircle, Cancel } from '@mui/icons-material';
+import { 
+  Container, 
+  Typography, 
+  Box, 
+  Card, 
+  CardContent, 
+  Chip, 
+  Alert,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Avatar,
+  Pagination,
+  CircularProgress
+} from '@mui/material';
+import { BugReport, LocationOn, CheckCircle, Cancel, Image as ImageIcon } from '@mui/icons-material';
 import { Icon } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useQuery } from 'react-query';
 import { photoService } from '../services/photoService';
+import { verifiedLanternfliesService } from '../services/verifiedLanternfliesService';
 import { MapLocation } from '../types';
 
 // Fix for default markers in react-leaflet
@@ -241,7 +260,181 @@ const MapPage: React.FC = () => {
           </Box>
         </CardContent>
       </Card>
+
+      <VerifiedLanternfliesTable />
     </Container>
+  );
+};
+
+// Component for the verified lanternflies table
+const VerifiedLanternfliesTable: React.FC = () => {
+  const [page, setPage] = useState(1);
+  const limit = 10;
+
+  const { data, isLoading, error } = useQuery(
+    ['verified-lanternflies', page, limit],
+    () => verifiedLanternfliesService.getAllSightings(page, limit),
+    {
+      keepPreviousData: true,
+      refetchInterval: 30000, // Refetch every 30 seconds
+    }
+  );
+
+  const handlePageChange = (event: React.ChangeEvent<unknown>, value: number) => {
+    setPage(value);
+  };
+
+  if (isLoading) {
+    return (
+      <Card sx={{ mt: 3 }}>
+        <CardContent>
+          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', py: 4 }}>
+            <CircularProgress />
+            <Typography variant="body1" sx={{ ml: 2 }}>
+              Loading verified lanternfly sightings...
+            </Typography>
+          </Box>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card sx={{ mt: 3 }}>
+        <CardContent>
+          <Alert severity="error">
+            Failed to load verified lanternfly sightings. Please try again later.
+          </Alert>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const sightings = data?.data?.sightings || [];
+  const pagination = data?.data?.pagination;
+
+  return (
+    <Card sx={{ mt: 3 }}>
+      <CardContent>
+        <Typography variant="h5" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <BugReport color="primary" />
+          Verified Lanternfly Sightings
+        </Typography>
+        
+        {sightings.length === 0 ? (
+          <Alert severity="info">
+            No verified lanternfly sightings found. Start taking photos to see them here!
+          </Alert>
+        ) : (
+          <>
+            <TableContainer component={Paper} sx={{ mt: 2 }}>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>User</TableCell>
+                    <TableCell>Location</TableCell>
+                    <TableCell>Coordinates</TableCell>
+                    <TableCell>Image</TableCell>
+                    <TableCell>Confidence</TableCell>
+                    <TableCell>Date/Time</TableCell>
+                    <TableCell>Points</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {sightings.map((sighting) => (
+                    <TableRow key={sighting.id} hover>
+                      <TableCell>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.main' }}>
+                            {sighting.username.charAt(0).toUpperCase()}
+                          </Avatar>
+                          <Typography variant="body2" fontWeight="medium">
+                            {sighting.username}
+                          </Typography>
+                        </Box>
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2">
+                          {sighting.location_name || 'Unknown Location'}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2" fontFamily="monospace">
+                          {sighting.latitude?.toFixed(4)}, {sighting.longitude?.toFixed(4)}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Box
+                          component="img"
+                          src={`http://localhost:5000${sighting.image_url}`}
+                          alt="Lanternfly sighting"
+                          sx={{
+                            width: 60,
+                            height: 60,
+                            objectFit: 'cover',
+                            borderRadius: 1,
+                            border: '1px solid',
+                            borderColor: 'divider',
+                            cursor: 'pointer',
+                            '&:hover': {
+                              opacity: 0.8,
+                            }
+                          }}
+                          onClick={() => {
+                            // Open image in new tab
+                            window.open(`http://localhost:5000${sighting.image_url}`, '_blank');
+                          }}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Chip
+                          label={`${(sighting.confidence_score * 100).toFixed(1)}%`}
+                          color={sighting.confidence_score > 0.8 ? 'success' : 'warning'}
+                          size="small"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2">
+                          {new Date(sighting.sighting_date).toLocaleDateString()}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {new Date(sighting.sighting_date).toLocaleTimeString()}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Chip
+                          label={`+${sighting.points_awarded}`}
+                          color="primary"
+                          size="small"
+                        />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+
+            {pagination && pagination.totalPages > 1 && (
+              <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
+                <Pagination
+                  count={pagination.totalPages}
+                  page={page}
+                  onChange={handlePageChange}
+                  color="primary"
+                  showFirstButton
+                  showLastButton
+                />
+              </Box>
+            )}
+
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 2, textAlign: 'center' }}>
+              Showing {sightings.length} of {pagination?.total || 0} verified lanternfly sightings
+            </Typography>
+          </>
+        )}
+      </CardContent>
+    </Card>
   );
 };
 

@@ -12,6 +12,7 @@ import authRoutes from './routes/auth.js';
 import photoRoutes from './routes/photos_ml.js'; // Use ML-enabled photo routes
 import userRoutes from './routes/users.js';
 import mapRoutes from './routes/map.js';
+import verifiedLanternfliesRoutes from './routes/verifiedLanternflies.js';
 
 // Import middleware
 import { errorHandler } from './middleware/errorHandler.js';
@@ -65,6 +66,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/photos', photoRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/map', mapRoutes);
+app.use('/api/verified-lanternflies', verifiedLanternfliesRoutes);
 
 // Root endpoint
 app.get('/', (req, res) => {

@@ -3,6 +3,7 @@ import multer from 'multer';
 import jwt from 'jsonwebtoken';
 import { User, Photo } from '../models/index.js';
 import { mlService } from '../services/mlService.js';
+import { Op } from 'sequelize';
 import path from 'path';
 import fs from 'fs';
 
@@ -112,6 +113,7 @@ router.post('/upload', upload.single('photo'), async (req, res) => {
       confirmed_lantern_flies: isLanternFly ? user.confirmed_lantern_flies + 1 : user.confirmed_lantern_flies,
       points: user.points + pointsAwarded,
     });
+
 
     res.status(201).json({
       success: true,
@@ -277,6 +279,64 @@ router.get('/user', async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to get user photos',
+    });
+  }
+});
+
+// Get research dataset statistics
+router.get('/research-dataset-stats', async (req, res) => {
+  try {
+    const stats = await researchDatasetService.getDatasetStats();
+    res.json({
+      success: true,
+      dataset_stats: stats
+    });
+  } catch (error) {
+    console.error('Research dataset stats error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to get research dataset statistics',
+    });
+  }
+});
+
+// Get map locations endpoint
+router.get('/map', async (req, res) => {
+  try {
+    // Get all photos with location data for the map
+    const photos = await Photo.findAll({
+      where: {
+        latitude: { [Op.not]: null },
+        longitude: { [Op.not]: null }
+      },
+      include: [{
+        model: User,
+        as: 'user',
+        attributes: ['username']
+      }],
+      order: [['created_at', 'DESC']],
+      limit: 1000 // Limit to prevent too many markers
+    });
+
+    // Format the data for the map
+    const mapLocations = photos.map(photo => ({
+      id: photo.id,
+      latitude: photo.latitude,
+      longitude: photo.longitude,
+      is_lantern_fly: photo.is_lantern_fly,
+      confidence_score: photo.confidence_score,
+      created_at: photo.created_at,
+      username: photo.user?.username || 'Unknown',
+      location_name: photo.location_name,
+      image_url: photo.image_url
+    }));
+
+    res.json(mapLocations);
+  } catch (error) {
+    console.error('Get map locations error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch map locations',
     });
   }
 });
