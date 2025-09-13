@@ -33,6 +33,8 @@ const CameraPage: React.FC = () => {
   const [location, setLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [verificationResult, setVerificationResult] = useState<boolean | null>(null);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -214,6 +216,34 @@ const CameraPage: React.FC = () => {
     }
   };
 
+  const handleVerification = async (isLanternFly: boolean) => {
+    if (!capturedImage || !classificationResult) return;
+
+    try {
+      setIsVerifying(true);
+      setVerificationResult(isLanternFly);
+      
+      // If user confirms it's a lanternfly, proceed with upload
+      if (isLanternFly) {
+        await uploadPhoto();
+      } else {
+        // If user says it's not a lanternfly, show message and reset
+        toast.info('Classification corrected. No points awarded.');
+        setCapturedImage(null);
+        setClassificationResult(null);
+        setLocation(null);
+        setLocationError(null);
+        setVerificationResult(null);
+      }
+      
+    } catch (error: any) {
+      console.error('Verification error:', error);
+      toast.error(error.message || 'Verification failed');
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
   const uploadPhoto = async () => {
     if (!capturedImage || !classificationResult) return;
 
@@ -245,6 +275,7 @@ const CameraPage: React.FC = () => {
       setClassificationResult(null);
       setLocation(null);
       setLocationError(null);
+      setVerificationResult(null);
     } catch (error: any) {
       console.error('Upload error:', error);
       toast.error(error.message || 'Upload failed');
@@ -258,6 +289,7 @@ const CameraPage: React.FC = () => {
     setClassificationResult(null);
     setLocation(null);
     setLocationError(null);
+    setVerificationResult(null);
   };
 
   return (
@@ -426,26 +458,72 @@ const CameraPage: React.FC = () => {
                   Points to be awarded: {classificationResult.points_awarded || 0}
                 </Typography>
 
-                <Box sx={{ display: 'flex', gap: 2 }}>
-                  <Button
-                    variant="contained"
-                    size="large"
-                    onClick={uploadPhoto}
-                    disabled={isUploading}
-                    startIcon={isUploading ? <CircularProgress size={20} /> : <Upload />}
-                    sx={{ py: 1.5, px: 4 }}
-                  >
-                    {isUploading ? 'Uploading...' : 'Upload Photo'}
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    size="large"
-                    onClick={resetCapture}
-                    sx={{ py: 1.5, px: 4 }}
-                  >
-                    Take Another
-                  </Button>
-                </Box>
+                {/* Verification status */}
+                {verificationResult !== null && (
+                  <Box sx={{ mb: 2, p: 2, borderRadius: 2, bgcolor: verificationResult ? 'success.light' : 'error.light' }}>
+                    <Typography variant="body2" color={verificationResult ? 'success.contrastText' : 'error.contrastText'} align="center">
+                      {verificationResult ? '✅ Verified as lanternfly - proceeding with upload' : '❌ Not a lanternfly - no points awarded'}
+                    </Typography>
+                  </Box>
+                )}
+
+                {/* Verification buttons for lanternfly detection */}
+                {classificationResult.is_lantern_fly && verificationResult === null ? (
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    <Typography variant="h6" color="primary" align="center" sx={{ mb: 1 }}>
+                      🤔 Is this really a lanternfly?
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" align="center" sx={{ mb: 2 }}>
+                      Please verify the AI classification to ensure accuracy
+                    </Typography>
+                    <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
+                      <Button
+                        variant="contained"
+                        color="success"
+                        size="large"
+                        onClick={() => handleVerification(true)}
+                        disabled={isVerifying}
+                        startIcon={isVerifying ? <CircularProgress size={20} /> : <CheckCircle />}
+                        sx={{ py: 1.5, px: 4 }}
+                      >
+                        {isVerifying ? 'Verifying...' : 'Yes, it\'s a lanternfly'}
+                      </Button>
+                      <Button
+                        variant="contained"
+                        color="error"
+                        size="large"
+                        onClick={() => handleVerification(false)}
+                        disabled={isVerifying}
+                        startIcon={isVerifying ? <CircularProgress size={20} /> : <Cancel />}
+                        sx={{ py: 1.5, px: 4 }}
+                      >
+                        {isVerifying ? 'Verifying...' : 'No, it\'s not'}
+                      </Button>
+                    </Box>
+                  </Box>
+                ) : (
+                  /* Regular upload buttons for non-lanternfly or after verification */
+                  <Box sx={{ display: 'flex', gap: 2 }}>
+                    <Button
+                      variant="contained"
+                      size="large"
+                      onClick={uploadPhoto}
+                      disabled={isUploading}
+                      startIcon={isUploading ? <CircularProgress size={20} /> : <Upload />}
+                      sx={{ py: 1.5, px: 4 }}
+                    >
+                      {isUploading ? 'Uploading...' : 'Upload Photo'}
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      size="large"
+                      onClick={resetCapture}
+                      sx={{ py: 1.5, px: 4 }}
+                    >
+                      Take Another
+                    </Button>
+                  </Box>
+                )}
               </CardContent>
             </Card>
           )}

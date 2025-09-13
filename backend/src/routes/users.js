@@ -1,20 +1,78 @@
 import express from 'express';
+import jwt from 'jsonwebtoken';
+import { User, Photo } from '../models/index.js';
 
 const router = express.Router();
+
+// Get current user endpoint
+router.get('/me', async (req, res) => {
+  try {
+    // Get user from JWT token
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        message: 'No token provided',
+      });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret');
+    const user = await User.findByPk(decoded.userId, {
+      attributes: ['id', 'username', 'email', 'points', 'total_photos', 'confirmed_lantern_flies', 'created_at'],
+    });
+    
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found',
+      });
+    }
+
+    res.json(user);
+  } catch (error) {
+    console.error('Get current user error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch user data',
+    });
+  }
+});
 
 // Get user stats endpoint
 router.get('/stats', async (req, res) => {
   try {
-    // For now, return mock data
-    // TODO: Implement actual database query
-    const mockStats = {
-      total_photos: Math.floor(Math.random() * 50) + 10,
-      confirmed_lantern_flies: Math.floor(Math.random() * 20) + 5,
-      points: Math.floor(Math.random() * 200) + 50,
-      accuracy_percentage: Math.floor(Math.random() * 30) + 70, // 70-100%
+    // Get user from JWT token
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        message: 'No token provided',
+      });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret');
+    const user = await User.findByPk(decoded.userId);
+    
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found',
+      });
+    }
+
+    // Calculate accuracy percentage
+    const accuracy_percentage = user.total_photos > 0 
+      ? Math.round((user.confirmed_lantern_flies / user.total_photos) * 100)
+      : 0;
+
+    const stats = {
+      total_photos: user.total_photos,
+      confirmed_lantern_flies: user.confirmed_lantern_flies,
+      points: user.points,
+      accuracy_percentage,
     };
 
-    res.json(mockStats);
+    res.json(stats);
   } catch (error) {
     console.error('Get user stats error:', error);
     res.status(500).json({
@@ -27,18 +85,26 @@ router.get('/stats', async (req, res) => {
 // Get leaderboard endpoint
 router.get('/leaderboard', async (req, res) => {
   try {
-    // For now, return mock data
-    // TODO: Implement actual database query
-    const mockLeaderboard = Array.from({ length: 10 }, (_, i) => ({
-      id: i + 1,
-      username: `User${i + 1}`,
-      points: Math.floor(Math.random() * 500) + 100,
-      total_photos: Math.floor(Math.random() * 100) + 20,
-      confirmed_lantern_flies: Math.floor(Math.random() * 50) + 10,
-      accuracy_percentage: Math.floor(Math.random() * 30) + 70,
-    })).sort((a, b) => b.points - a.points);
+    // Get real users from database, ordered by points
+    const users = await User.findAll({
+      attributes: ['id', 'username', 'points', 'total_photos', 'confirmed_lantern_flies'],
+      order: [['points', 'DESC']],
+      limit: 50, // Top 50 users
+    });
 
-    res.json(mockLeaderboard);
+    // Transform to leaderboard format
+    const leaderboard = users.map(user => ({
+      id: user.id,
+      username: user.username,
+      points: user.points,
+      total_photos: user.total_photos,
+      confirmed_lantern_flies: user.confirmed_lantern_flies,
+      accuracy_percentage: user.total_photos > 0 
+        ? Math.round((user.confirmed_lantern_flies / user.total_photos) * 100)
+        : 0,
+    }));
+
+    res.json(leaderboard);
   } catch (error) {
     console.error('Get leaderboard error:', error);
     res.status(500).json({
@@ -51,30 +117,11 @@ router.get('/leaderboard', async (req, res) => {
 // Get user achievements endpoint
 router.get('/achievements', async (req, res) => {
   try {
-    // For now, return mock data
-    // TODO: Implement actual database query
-    const mockAchievements = [
-      {
-        id: 1,
-        user_id: 1,
-        achievement_type: 'first_photo',
-        achievement_name: 'First Spotter',
-        description: 'Uploaded your first photo',
-        points_reward: 5,
-        earned_at: new Date(Date.now() - 86400000).toISOString(),
-      },
-      {
-        id: 2,
-        user_id: 1,
-        achievement_type: 'lantern_fly_detection',
-        achievement_name: 'Lantern Fly Hunter',
-        description: 'Detected your first lantern fly',
-        points_reward: 25,
-        earned_at: new Date(Date.now() - 172800000).toISOString(),
-      },
-    ];
+    // For now, return empty array since we don't have achievements table yet
+    // TODO: Implement actual achievements system with database
+    const achievements = [];
 
-    res.json(mockAchievements);
+    res.json(achievements);
   } catch (error) {
     console.error('Get user achievements error:', error);
     res.status(500).json({

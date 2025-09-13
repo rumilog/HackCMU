@@ -46,7 +46,7 @@ export const initializeDatabase = async () => {
     await import('../models/index.js');
     
     // Sync database (create tables if they don't exist)
-    await sequelize.sync({ alter: true }); // Use alter: true for development
+    await sequelize.sync({ force: false }); // Use force: false to avoid constraint issues
     console.log('✅ Database synchronized successfully.');
     console.log('📊 Tables created: users, photos');
     return true;
