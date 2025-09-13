@@ -6,6 +6,8 @@ import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
 import expressValidator from 'express-validator';
+import path from 'path';
+import fs from 'fs';
 
 // Import routes
 import authRoutes from './routes/auth.js';
@@ -51,6 +53,16 @@ app.use(compression());
 
 // Logging middleware
 app.use(morgan('combined'));
+
+// Static file serving for uploads
+// Create uploads directory if it doesn't exist
+const uploadsDir = path.join(process.cwd(), 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+// Serve static files from uploads directory
+app.use('/uploads', express.static(uploadsDir));
 
 // Health check endpoint
 app.get('/health', (req, res) => {

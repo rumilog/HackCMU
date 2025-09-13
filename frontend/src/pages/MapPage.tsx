@@ -17,9 +17,10 @@ import {
   Paper,
   Avatar,
   Pagination,
-  CircularProgress
+  CircularProgress,
+  Button
 } from '@mui/material';
-import { BugReport, LocationOn, CheckCircle, Cancel, Image as ImageIcon } from '@mui/icons-material';
+import { BugReport, LocationOn, CheckCircle, Cancel, Image as ImageIcon, Download } from '@mui/icons-material';
 import { Icon } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useQuery } from 'react-query';
@@ -62,37 +63,35 @@ const notLanternFlyIcon = new Icon({
   popupAnchor: [1, -34],
 });
 
-const MapStats: React.FC<{ locations: MapLocation[] }> = ({ locations }) => {
-  const totalReports = locations.length;
-  const lanternFlyReports = locations.filter(loc => loc.is_lantern_fly).length;
-  const notLanternFlyReports = totalReports - lanternFlyReports;
+const MapStats: React.FC<{ locations: MapLocation[]; totalSightings: number }> = ({ locations, totalSightings }) => {
+  const uniqueLocations = locations.length; // Number of unique locations (with offsets)
+  const totalLanternflySightings = totalSightings; // Total number of lanternfly sightings
 
   return (
     <Card sx={{ mb: 3 }}>
       <CardContent>
         <Typography variant="h6" gutterBottom>
-          📊 Map Statistics
+          📊 Lanternfly Map Statistics
         </Typography>
         <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
           <Chip
-            icon={<LocationOn />}
-            label={`${totalReports} Total Reports`}
-            color="primary"
-            variant="outlined"
-          />
-          <Chip
             icon={<CheckCircle />}
-            label={`${lanternFlyReports} Lantern Flies`}
+            label={`${totalLanternflySightings} Total Lanternfly Sightings`}
             color="success"
             variant="outlined"
           />
           <Chip
-            icon={<Cancel />}
-            label={`${notLanternFlyReports} Other Insects`}
-            color="default"
+            icon={<LocationOn />}
+            label={`${uniqueLocations} Unique Locations`}
+            color="primary"
             variant="outlined"
           />
         </Box>
+        {totalLanternflySightings > uniqueLocations && (
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+            Some locations have multiple sightings - markers are slightly offset to show all detections
+          </Typography>
+        )}
       </CardContent>
     </Card>
   );
@@ -116,7 +115,7 @@ const MapPage: React.FC = () => {
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
   const [mapError, setMapError] = useState<string | null>(null);
 
-  const { data: locations = [], isLoading, error } = useQuery(
+  const { data: allLocations = [], isLoading, error } = useQuery(
     'mapLocations',
     photoService.getMapLocations,
     {
@@ -127,6 +126,47 @@ const MapPage: React.FC = () => {
       }
     }
   );
+
+  // Filter to only show lanternfly sightings
+  const lanternflyLocations = allLocations.filter(location => location.is_lantern_fly === true);
+
+  // Group nearby sightings and add small offsets for multiple sightings at same location
+  const processLocations = (locations: MapLocation[]) => {
+    const processedLocations: (MapLocation & { offset?: { lat: number; lng: number } })[] = [];
+    const locationGroups = new Map<string, MapLocation[]>();
+
+    // Group locations by rounded coordinates (to handle very close locations)
+    locations.forEach(location => {
+      const key = `${location.latitude.toFixed(6)},${location.longitude.toFixed(6)}`;
+      if (!locationGroups.has(key)) {
+        locationGroups.set(key, []);
+      }
+      locationGroups.get(key)!.push(location);
+    });
+
+    // Process each group
+    locationGroups.forEach((group, key) => {
+      if (group.length === 1) {
+        // Single sighting, no offset needed
+        processedLocations.push(group[0]);
+      } else {
+        // Multiple sightings at same location, add small offsets
+        group.forEach((location, index) => {
+          const offsetDistance = 0.0001; // Small offset in degrees
+          const angle = (index * 2 * Math.PI) / group.length; // Distribute in circle
+          const offset = {
+            lat: Math.cos(angle) * offsetDistance,
+            lng: Math.sin(angle) * offsetDistance
+          };
+          processedLocations.push({ ...location, offset });
+        });
+      }
+    });
+
+    return processedLocations;
+  };
+
+  const locations = processLocations(lanternflyLocations);
 
   useEffect(() => {
     // Get user's current location
@@ -146,10 +186,10 @@ const MapPage: React.FC = () => {
     return (
       <Container maxWidth="lg" sx={{ py: 4 }}>
         <Typography variant="h4" gutterBottom align="center">
-          🗺️ Lantern Fly Map
+          🗺️ Lanternfly Sightings Map
         </Typography>
         <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-          <Typography>Loading map data...</Typography>
+          <Typography>Loading lanternfly sightings...</Typography>
         </Box>
       </Container>
     );
@@ -159,10 +199,10 @@ const MapPage: React.FC = () => {
     return (
       <Container maxWidth="lg" sx={{ py: 4 }}>
         <Typography variant="h4" gutterBottom align="center">
-          🗺️ Lantern Fly Map
+          🗺️ Lanternfly Sightings Map
         </Typography>
         <Alert severity="error" sx={{ mt: 2 }}>
-          {mapError || 'Failed to load map data. Please try again later.'}
+          {mapError || 'Failed to load lanternfly sightings. Please try again later.'}
         </Alert>
       </Container>
     );
@@ -171,13 +211,13 @@ const MapPage: React.FC = () => {
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <Typography variant="h4" gutterBottom align="center">
-        🗺️ Lantern Fly Map
+        🗺️ Lanternfly Sightings Map
       </Typography>
       <Typography variant="body1" color="text.secondary" align="center" sx={{ mb: 4 }}>
-        Explore reported lantern fly locations in your area
+        View verified lanternfly sightings and their locations
       </Typography>
 
-      <MapStats locations={locations} />
+      <MapStats locations={locations} totalSightings={lanternflyLocations.length} />
 
       <Card>
         <CardContent sx={{ p: 0 }}>
@@ -195,37 +235,44 @@ const MapPage: React.FC = () => {
               
               <MapComponent locations={locations} />
               
-              {locations.map((location) => (
-                <Marker
-                  key={location.id}
-                  position={[location.latitude, location.longitude]}
-                  icon={location.is_lantern_fly ? lanternFlyIcon : notLanternFlyIcon}
-                >
-                  <Popup>
-                    <Box>
-                      <Typography variant="subtitle2" gutterBottom>
-                        {location.is_lantern_fly ? (
+              {locations.map((location) => {
+                // Apply offset if present
+                const lat = location.latitude + (location.offset?.lat || 0);
+                const lng = location.longitude + (location.offset?.lng || 0);
+                
+                return (
+                  <Marker
+                    key={location.id}
+                    position={[lat, lng]}
+                    icon={lanternFlyIcon}
+                  >
+                    <Popup>
+                      <Box>
+                        <Typography variant="subtitle2" gutterBottom>
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                             <BugReport color="success" />
                             Lantern Fly Detected
                           </Box>
-                        ) : (
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <Cancel color="default" />
-                            Not a Lantern Fly
-                          </Box>
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          Confidence: {(location.confidence_score * 100).toFixed(1)}%
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          User: {location.username || 'Unknown'}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          Reported: {new Date(location.created_at).toLocaleDateString()}
+                        </Typography>
+                        {location.offset && (
+                          <Typography variant="caption" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+                            Multiple sightings at this location
+                          </Typography>
                         )}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        Confidence: {(location.confidence_score * 100).toFixed(1)}%
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        Reported: {new Date(location.created_at).toLocaleDateString()}
-                      </Typography>
-                    </Box>
-                  </Popup>
-                </Marker>
-              ))}
+                      </Box>
+                    </Popup>
+                  </Marker>
+                );
+              })}
               </MapContainer>
             )}
             {typeof window === 'undefined' && (
@@ -243,7 +290,7 @@ const MapPage: React.FC = () => {
         </CardContent>
       </Card>
 
-      <Card sx={{ mt: 3, bgcolor: 'info.light', color: 'white' }}>
+      <Card sx={{ mt: 3, bgcolor: 'success.light', color: 'white' }}>
         <CardContent>
           <Typography variant="h6" gutterBottom>
             🧭 Map Legend
@@ -251,13 +298,12 @@ const MapPage: React.FC = () => {
           <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <Box sx={{ width: 20, height: 20, bgcolor: '#4CAF50', borderRadius: '50%' }} />
-              <Typography variant="body2">Confirmed Lantern Fly</Typography>
-            </Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Box sx={{ width: 20, height: 20, bgcolor: '#757575', borderRadius: '50%' }} />
-              <Typography variant="body2">Not a Lantern Fly</Typography>
+              <Typography variant="body2">Verified Lanternfly Sightings</Typography>
             </Box>
           </Box>
+          <Typography variant="body2" sx={{ mt: 1, opacity: 0.9 }}>
+            Click on markers to view details. All markers represent confirmed lanternfly detections.
+          </Typography>
         </CardContent>
       </Card>
 
@@ -270,6 +316,44 @@ const MapPage: React.FC = () => {
 const VerifiedLanternfliesTable: React.FC = () => {
   const [page, setPage] = useState(1);
   const limit = 10;
+
+  // CSV export function
+  const exportToCSV = (sightings: any[]) => {
+    const headers = [
+      'ID',
+      'Username', 
+      'Latitude',
+      'Longitude',
+      'Confidence Score (%)',
+      'Sighting Date',
+      'Image URL'
+    ];
+
+    const csvData = sightings.map(sighting => [
+      sighting.id,
+      sighting.username || 'Unknown',
+      sighting.latitude?.toFixed(6) || '',
+      sighting.longitude?.toFixed(6) || '',
+      (sighting.confidence_score * 100).toFixed(1),
+      new Date(sighting.sighting_date).toISOString(),
+      `http://localhost:5000${sighting.image_url}`
+    ]);
+
+    const csvContent = [
+      headers.join(','),
+      ...csvData.map(row => row.map(field => `"${field}"`).join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `lanternfly_sightings_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   const { data, isLoading, error } = useQuery(
     ['verified-lanternflies', page, limit],
@@ -317,10 +401,28 @@ const VerifiedLanternfliesTable: React.FC = () => {
   return (
     <Card sx={{ mt: 3 }}>
       <CardContent>
-        <Typography variant="h5" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <BugReport color="primary" />
-          Verified Lanternfly Sightings
-        </Typography>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+          <Typography variant="h5" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <BugReport color="primary" />
+            Verified Lanternfly Sightings
+          </Typography>
+          <Button
+            variant="outlined"
+            startIcon={<Download />}
+            onClick={() => exportToCSV(sightings)}
+            sx={{ 
+              borderColor: 'primary.main',
+              color: 'primary.main',
+              '&:hover': {
+                borderColor: 'primary.dark',
+                backgroundColor: 'primary.light',
+                color: 'primary.dark'
+              }
+            }}
+          >
+            Export CSV
+          </Button>
+        </Box>
         
         {sightings.length === 0 ? (
           <Alert severity="info">
@@ -329,16 +431,14 @@ const VerifiedLanternfliesTable: React.FC = () => {
         ) : (
           <>
             <TableContainer component={Paper} sx={{ mt: 2 }}>
-              <Table>
+              <Table sx={{ '& .MuiTableCell-root': { padding: '16px 8px' } }}>
                 <TableHead>
                   <TableRow>
                     <TableCell>User</TableCell>
-                    <TableCell>Location</TableCell>
                     <TableCell>Coordinates</TableCell>
-                    <TableCell>Image</TableCell>
+                    <TableCell>Image Preview</TableCell>
                     <TableCell>Confidence</TableCell>
                     <TableCell>Date/Time</TableCell>
-                    <TableCell>Points</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -355,11 +455,6 @@ const VerifiedLanternfliesTable: React.FC = () => {
                         </Box>
                       </TableCell>
                       <TableCell>
-                        <Typography variant="body2">
-                          {sighting.location_name || 'Unknown Location'}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>
                         <Typography variant="body2" fontFamily="monospace">
                           {sighting.latitude?.toFixed(4)}, {sighting.longitude?.toFixed(4)}
                         </Typography>
@@ -370,21 +465,26 @@ const VerifiedLanternfliesTable: React.FC = () => {
                           src={`http://localhost:5000${sighting.image_url}`}
                           alt="Lanternfly sighting"
                           sx={{
-                            width: 60,
-                            height: 60,
+                            width: 120,
+                            height: 90,
                             objectFit: 'cover',
-                            borderRadius: 1,
-                            border: '1px solid',
-                            borderColor: 'divider',
+                            borderRadius: 2,
+                            border: '2px solid',
+                            borderColor: sighting.is_lantern_fly ? 'success.main' : 'grey.400',
                             cursor: 'pointer',
+                            transition: 'all 0.2s ease-in-out',
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
                             '&:hover': {
-                              opacity: 0.8,
+                              transform: 'scale(1.05)',
+                              boxShadow: '0 4px 16px rgba(0,0,0,0.2)',
+                              borderColor: sighting.is_lantern_fly ? 'success.dark' : 'grey.600',
                             }
                           }}
                           onClick={() => {
                             // Open image in new tab
                             window.open(`http://localhost:5000${sighting.image_url}`, '_blank');
                           }}
+                          title={`Click to view full image - ${sighting.is_lantern_fly ? 'Lanternfly detected' : 'Not a lanternfly'}`}
                         />
                       </TableCell>
                       <TableCell>
@@ -401,13 +501,6 @@ const VerifiedLanternfliesTable: React.FC = () => {
                         <Typography variant="caption" color="text.secondary">
                           {new Date(sighting.sighting_date).toLocaleTimeString()}
                         </Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Chip
-                          label={`+${sighting.points_awarded}`}
-                          color="primary"
-                          size="small"
-                        />
                       </TableCell>
                     </TableRow>
                   ))}
