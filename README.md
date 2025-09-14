@@ -17,9 +17,9 @@ A mobile-friendly web application that uses computer vision to identify dead lan
 ```
 hackCMU/
 ├── frontend/          # React TypeScript web app
-├── backend/           # Node.js Express API
+├── backend/           # Node.js Express API with SQLite database
 ├── ml-model/          # Python ML model and inference
-├── database/          # PostgreSQL schemas and migrations
+├── database/          # SQLite schemas and migrations
 └── deployment/        # Docker and deployment configs
 ```
 
@@ -29,7 +29,6 @@ hackCMU/
 
 - Node.js 18+
 - Python 3.11+
-- PostgreSQL 15+ with PostGIS
 - Git
 
 ### Installation
@@ -50,28 +49,51 @@ hackCMU/
    # Backend
    cp backend/env.example backend/.env
    # Edit backend/.env with your configuration
+   ```
+
+4. **Start the development servers**
+
+   **Option A: Automated Start (Recommended)**
+   ```bash
+   python start_ml_integration.py
+   ```
+
+   **Option B: Manual Start**
+   ```bash
+   # Terminal 1 - Start ML Service
+   cd ml-model
+   python inference/api_server.py
    
-   # ML Model
-   cp ml-model/.env.example ml-model/.env
-   # Edit ml-model/.env with your configuration
-   ```
-
-4. **Set up the database**
-   ```bash
-   # Start PostgreSQL with PostGIS
-   # Run the schema initialization
-   psql -U postgres -d lantern_fly_tracker -f database/schemas/init.sql
-   ```
-
-5. **Start the development servers**
-   ```bash
+   # Terminal 2 - Start Backend
+   cd backend
    npm run dev
+   
+   # Terminal 3 - Start Frontend
+   cd frontend
+   npm run dev
+   ```
+
+   **Option C: PowerShell (Windows)**
+   ```powershell
+   .\start_backend.ps1
    ```
 
 This will start:
 - Frontend: http://localhost:3000
 - Backend API: http://localhost:5000
-- ML Model API: http://localhost:8000
+- ML Model API: http://localhost:5001
+
+## 🧪 Testing
+
+Test the ML integration:
+
+```bash
+# Test ML service directly
+python test_ml_integration.py
+
+# Test classification
+python test_classification.py
+```
 
 ## 🐳 Docker Deployment
 
@@ -110,13 +132,13 @@ npm run dev
 
 ```bash
 cd ml-model
-pip install -r requirements.txt
-python inference/app.py
+pip install -r inference/requirements.txt
+python inference/api_server.py
 ```
 
 ## 📊 Database Schema
 
-The application uses PostgreSQL with PostGIS for geospatial data:
+The application uses SQLite for data storage:
 
 - **users**: User accounts and statistics
 - **photos**: Photo metadata and classification results
@@ -127,9 +149,10 @@ The application uses PostgreSQL with PostGIS for geospatial data:
 
 The ML pipeline includes:
 
-- **Image Classification**: CNN model for lantern fly detection
+- **Image Classification**: EfficientNet-B0 model for lantern fly detection
 - **Data Augmentation**: Enhanced training with various image transformations
-- **Model Serving**: FastAPI-based inference service
+- **Model Serving**: Flask-based inference service on port 5001
+- **Model Performance**: 99.43% validation accuracy, 89.7% test accuracy
 - **Future Features**: Duplication detection using image embeddings
 
 ## 🎮 Gamification
